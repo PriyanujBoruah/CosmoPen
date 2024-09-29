@@ -5,77 +5,27 @@ import google.generativeai as genai
 from pypdf import PdfReader
 from generative_functions_mk_9 import (QUESTION_PAPER_GENERATION, CHAPTER_EXPLAINER,
                                        RESEARCH_PAPER_SUMMARIZER, STUDY_GUIDE_CREATOR)
+from users import USERS
 
 st.set_page_config(page_title="CosmoPen", page_icon=None, layout="wide", initial_sidebar_state="collapsed", menu_items=None)
-
-def email_exists(connection, email):
-    cursor = connection.cursor()
-    sql = "SELECT 1 FROM users WHERE email = %s"
-    values = (email,) 
-
-    cursor.execute(sql, values)
-    result = cursor.fetchone()
-
-    return bool(result)  # True if a row was found, False otherwise
-
-
-def check_remaining_rates(connection, email):
-    """Checks and prints the daily_remaining and total_remaining rate limits 
-       for a given email on the CURRENT date.
-    """
-
-    today = date.today()  # Get the current date
-    cursor = connection.cursor()
-    sql = """
-        SELECT daily_remaining, total_remaining 
-        FROM rate
-        WHERE email = %s AND usage_date = %s;
-    """
-    values = (email, today) 
-
-    cursor.execute(sql, values)
-    result = cursor.fetchone()
-
-    if result:
-        daily_remaining, total_remaining = result
-        return daily_remaining, total_remaining
-    else:
-        return "Error: No rate limit information found"
-
-
 
 def login_page():
     st.title("Welcome to CosmoPen")
     with st.container(border=True):
-        email = st.text_input("Please enter your email:")
+        USER = st.text_input("Please Enter Pilot Id:")
         if st.button("Login"):
-            email_to_check = email
-            if email_exists(connection, email_to_check):
-                st.session_state.email = email  # Store name in session state
-                st.session_state.page = "two"  # Navigate to page two
-            else:
-                st.warning("Invalid Email")
-
+            if USER in USERS:
+                st.session_state.user = USER  # Store name in session state
+                st.session_state.page = "two"
 def dashboard():
-    if "email" in st.session_state:
-        EMAIL = st.session_state.email
-        DAILY_CREDIT, TOTAL_CREDIT = check_remaining_rates(connection, EMAIL)
+    if "user" in st.session_state:
+        USER = st.session_state.user
+        CREDIT = USERS.get(USER)
     else:
-        st.write("Name not found. Please go back to Page One.")
+        st.write("USER not found. Please go back to Page One.")
 
-    return EMAIL, DAILY_CREDIT, TOTAL_CREDIT
+    return USER, CREDIT
 
-
-connection = mysql.connector.connect(
-  host = "gateway01.ap-southeast-1.prod.aws.tidbcloud.com",
-  port = 4000,
-  user = "2mF9jreccF49KBR.root",
-  password = "Jcwu6U9eVVSwRTjt",
-  database = "userlist",
-  ssl_ca = "isrgrootx1.pem",
-  ssl_verify_cert = True,
-  ssl_verify_identity = True
-)
 
 
 TONES_TIER1 = [
@@ -123,7 +73,7 @@ if "page" not in st.session_state:
 if st.session_state.page == "one":
     login_page()
 elif st.session_state.page == "two":
-    EMAIL, DAILY_CREDIT, TOTAL_CREDIT = dashboard()
+    USER, CREDIT = dashboard()
     HERO_COL1, HERO_COL2, HERO_COL3, HERO_COL4 = st.columns(4)
 
     with HERO_COL1:
@@ -282,8 +232,8 @@ elif st.session_state.page == "two":
 
     with HERO_COL4:
         with st.popover("Account Settings", use_container_width=True):
-            st.subheader(EMAIL)
-            st.write(f"Daily credit remaining: {DAILY_CREDIT}")
+            st.subheader(USER)
+            st.write(f"Remaining Credit: {CREDIT}")
 
 
 
