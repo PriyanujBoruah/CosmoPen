@@ -1,9 +1,20 @@
 import streamlit as st
+import mysql.connector
 from datetime import date, timedelta
 import google.generativeai as genai
 from pypdf import PdfReader
-from generative_functions_mk_9 import (QUESTION_PAPER_GENERATION, CHAPTER_EXPLAINER,
-                                       RESEARCH_PAPER_SUMMARIZER, STUDY_GUIDE_CREATOR)
+from generative_functions import (BLOG_POST_IDEA_GENERATOR, BLOG_POST_GENERATOR, NEWS_ARTICLE_WRITER, CREATIVE_WRITING_PROMPT,
+                                  VIDEO_SCRIPT_WRITER, VIDEO_DESCRIPTION_WRITER, HASHTAG_GENERATOR, CONTENT_PROMOTION_GENERATOR,
+                                  AD_COPYWRITER, CALL_TO_ACTION_GENERATOR, AIDA_COPYWRITER, PAS_COPYWRITER, GOOGLE_AD_GENERATOR,
+                                  SOCIAL_MEDIA_AD_GENERATOR, MARKETING_EMAIL_WRITER, LINKEDIN_POST_GENERATOR, FACEBOOK_POST_GENERATOR,
+                                  JOB_APPLICATION_WRITER, INTERVIEW_QUESTION_GENERATOR, JOB_DESCRIPTION_GENERATOR, PROFESSIONAL_EMAIL_WRITER,
+                                  DOCUMENT_SUMMARIZER, MEETING_NOTES_SUMMARIZER, COVER_LETTER_GENERATOR, BUSINESS_PITCH_GENERATOR,
+                                  MEETING_AGENDA_GENERATOR, SEO_CONTENT_WRITER, KEYWORD_EXTRACTOR, KEYWORD_GENERATOR, META_TITLE_GENERATOR,
+                                  META_DESCRIPTION_GENERATOR, WEBSITE_COPYWRITER, PRODUCT_DESCRIPTION_GENERATOR, RESEARCH_PAPER_SUMMARIZER,
+                                  CHAPTER_EXPLAINER, QUESTION_PAPER_GENERATION, STUDY_GUIDE_CREATOR, SONG_LYRICS_GENERATOR, POEM_GENERATOR,
+                                  STORY_GENERATOR, PERSONALIZED_RECIPE_GENERATOR, RECIPE_GENERATOR, PERSONALIZED_EMAIL_GENERATOR, CODE_GENERATOR,
+                                  TECHNICAL_DOCUMENTATION_WRITER, GRAMMAR_CHECKER, SENTENCE_REWORDER, TEXT_INFLATOR, SENTENCE_SHORTENER,
+                                  SUMMARIZER, TRANSLATOR) 
 from users import USERS
 
 st.set_page_config(page_title="CosmoPen", page_icon=None, layout="wide", initial_sidebar_state="collapsed", menu_items=None)
@@ -76,6 +87,12 @@ elif st.session_state.page == "two":
     HERO_COL1, HERO_COL2, HERO_COL3, HERO_COL4 = st.columns(4)
 
     with HERO_COL1:
+        with st.popover("**Account Settings**", use_container_width=True):
+            st.subheader(USER)
+            st.write(f"Remaining Credit: {CREDIT}")
+
+
+    with HERO_COL2:
         with st.popover("**AI Generator Mode**", help="Note: Selecting the mode will reset the content.", use_container_width=True):
             MODE_SELECTION = st.radio(
             "**Generate for**",
@@ -92,14 +109,14 @@ elif st.session_state.page == "two":
                 "Extra tools for even more tasks.",
             ],
         )
-    with HERO_COL2:
+    with HERO_COL4:
         if MODE_SELECTION == "**Content Creator & Influencer**":
 
-            with st.popover(f"**{MODE_SELECTION}**", help="Note: Selecting the mode will reset the content.", use_container_width=True):
+            with st.popover(f"**Generative Task**", help="Note: Selecting the mode will reset the content.", use_container_width=True):
                 SELECTION = st.radio(
                 "**Generation Type**",
                 ["**Blog Post Idea Generator**", "**Blog Post Writer**", "**News Article Writer**", "**Creative Writing Prompts**",
-                "**Video Script Writer**", "**Video Description Writer**", "**Image Caption Generator**", "**Hashtag Generator**"],
+                "**Video Script Writer**", "**Video Description Writer**", "**Hashtag Generator**"],
                 captions=[
                     "Spark new ideas for your next blog post.",
                     "Write high-quality content with ease.",
@@ -107,14 +124,13 @@ elif st.session_state.page == "two":
                     "Fuel your imagination with fresh writing prompts.",
                     "Craft compelling video scripts that captivate your audience.",
                     "Optimize your video descriptions for search engines.",
-                    "Improve your image SEO and reach.",
-                    "Find relevant hashtags to increase your reach.",
+                    "Find relevant hashtags to increase your reach."
                 ],
             )
                 
         if MODE_SELECTION == "**Marketing & Advertising Specialists**":
             
-            with st.popover(f"**{MODE_SELECTION}**", help="Note: Selecting the mode will reset the content.", use_container_width=True):
+            with st.popover(f"**Generative Task**", help="Note: Selecting the mode will reset the content.", use_container_width=True):
                 SELECTION = st.radio(
                 "**Generation Type**",
                 ["**Content Promotion Posts**", "**Ad Copywriter**", "**Call to Action Generator**", "**AIDA Copywriter**",
@@ -135,7 +151,7 @@ elif st.session_state.page == "two":
             )
         
         if MODE_SELECTION == "**Job Seekers & Professionals**":
-            with st.popover(f"**{MODE_SELECTION}**", help="Note: Selecting the mode will reset the content.", use_container_width=True):
+            with st.popover(f"**Generative Task**", help="Note: Selecting the mode will reset the content.", use_container_width=True):
                 SELECTION = st.radio(
                 "**Generation Type**",
                 ["**Job application writer (resume & cover letter)**", "**Interview question generator**", "**Job description generator**", "**Professional email writer**",
@@ -154,11 +170,11 @@ elif st.session_state.page == "two":
             )
         
         if MODE_SELECTION == "**SEO Professionals**":
-            with st.popover(f"**{MODE_SELECTION}**", help="Note: Selecting the mode will reset the content.", use_container_width=True):
+            with st.popover(f"**Generative Task**", help="Note: Selecting the mode will reset the content.", use_container_width=True):
                 SELECTION = st.radio(
                 "**Generation Type**",
                 ["**SEO content writer**", "**Keyword extractor**", "**AI keyword generator**", "**Meta title generator**",
-                "**Meta description generator**", "**Website copywriter**", "**Product description generator**", "**Image caption writer**"],
+                "**Meta description generator**", "**Website copywriter**", "**Product description generator**"],
                 captions=[
                     "Create optimized content that ranks higher in search engines.",
                     "Identify relevant keywords for your content.",
@@ -166,13 +182,12 @@ elif st.session_state.page == "two":
                     "Craft compelling meta titles for your pages.",
                     "Write persuasive meta descriptions that entice clicks.",
                     "Write engaging copy that converts visitors into customers.",
-                    "Create persuasive product descriptions that sell.",
-                    "Write informative and engaging captions for your images."
+                    "Create persuasive product descriptions that sell."
                 ],
             )
         
         if MODE_SELECTION == "**Students & Educators**":
-            with st.popover(f"**{MODE_SELECTION}**", help="Note: Selecting the mode will reset the content.", use_container_width=True):
+            with st.popover(f"**Generative Task**", help="Note: Selecting the mode will reset the content.", use_container_width=True):
                 SELECTION = st.radio(
                 "**Generation Type**",
                 ["**Research Paper Summarizer**", "**Lesson Explainer**",
@@ -187,7 +202,7 @@ elif st.session_state.page == "two":
             
         
         if MODE_SELECTION == "**Personal Use & Creativity**":
-            with st.popover(f"**{MODE_SELECTION}**", help="Note: Selecting the mode will reset the content.", use_container_width=True):
+            with st.popover(f"**Generative Task**", help="Note: Selecting the mode will reset the content.", use_container_width=True):
                 SELECTION = st.radio(
                 "**Generation Type**",
                 ["**Song Lyrics Generator**", "**Poem Generator**", "**Story Generator**",
@@ -203,7 +218,7 @@ elif st.session_state.page == "two":
             )
             
         if MODE_SELECTION == "**Coding & Technical Tools**":
-            with st.popover(f"**{MODE_SELECTION}**", help="Note: Selecting the mode will reset the content.", use_container_width=True):
+            with st.popover(f"**Generative Task**", help="Note: Selecting the mode will reset the content.", use_container_width=True):
                 SELECTION = st.radio(
                 "**Generation Type**",
                 ["**Code Generator**", "**Technical Documentation Writer**"],
@@ -214,7 +229,7 @@ elif st.session_state.page == "two":
             )
         
         if MODE_SELECTION == "**Additional Tools**":
-            with st.popover(f"**{MODE_SELECTION}**", help="Note: Selecting the mode will reset the content.", use_container_width=True):
+            with st.popover(f"**Generative Task**", help="Note: Selecting the mode will reset the content.", use_container_width=True):
                 SELECTION = st.radio(
                 "**Generation Type**",
                 ["**Grammar Checker & Improver**", "**Sentence Reworder**", "**Text Inflator**",
@@ -229,10 +244,7 @@ elif st.session_state.page == "two":
                 ],
             )
 
-    with HERO_COL4:
-        with st.popover("Account Settings", use_container_width=True):
-            st.subheader(USER)
-            st.write(f"Remaining Credit: {CREDIT}")
+    
 
 
 
@@ -240,8 +252,7 @@ elif st.session_state.page == "two":
 
 
     if MODE_SELECTION == "**Content Creator & Influencer**":
-        with st.container(border=True):
-            DASH_COL1, DASH_COL2 = st.columns(2, gap="medium")
+        DASH_COL1, DASH_COL2 = st.columns(2, gap="medium")
 
         with DASH_COL1:
 
@@ -373,25 +384,6 @@ elif st.session_state.page == "two":
 
                 # # # # # M O D E 7 # # # # #
 
-                if SELECTION == "**Image Caption Generator**":
-                    SMOL1, SMOL2, SMOL3 = st.columns(3)
-                    with SMOL1:
-                        IMAGE_CAPTION_STYLE = st.selectbox("Caption Style", options=("Quote", "Question", "Story", "Fact", "Joke"), key="style7")
-                    with SMOL2:
-                        IMAGE_CAPTION_TARGET = st.selectbox("Target Audience", options=("Fashion followers", "Food lovers", "Travel enthusiasts"), key="target7")
-                    with SMOL3:
-                        IMAGE_CAPTION_CTA = st.selectbox("Call to Action", options=("Shop now", "Follow for more", "Like and comment"), key="cta7")
-                    SMOL4, SMOL5 = st.columns(2)
-                    with SMOL4:
-                        IMAGE_CAPTION_FILE = st.text_input("Image File Name")
-                    with SMOL5:
-                        IMAGE_CAPTION_KEYWORDS = st.text_input("Keywords", key="keywords7")
-
-                    if IMAGE_CAPTION_STYLE and IMAGE_CAPTION_TARGET and IMAGE_CAPTION_CTA and IMAGE_CAPTION_FILE and IMAGE_CAPTION_KEYWORDS:
-                        VALID = True
-
-                # # # # # M O D E 8 # # # # #
-
                 if SELECTION == "**Hashtag Generator**":
                     SMOL1, SMOL2, SMOL3 = st.columns(3)
                     with SMOL1:
@@ -414,27 +406,25 @@ elif st.session_state.page == "two":
             if not GENERATE:
                 container.write("**Generated content will be displayed here**")
             if GENERATE:
-                if SELECTION == "**Business Pitch Generation**":
-                    container.write("Blog Idea Output")
-                if SELECTION == "**Cover Letter Generation**":
-                    container.write("Blog Post Output")
-                if SELECTION == "**Job Description Creator**":
-                    container.write("News Article Output")
-                if SELECTION == "**AI Tagline Creator**":
-                    container.write("Creative Writing Output")
-                if SELECTION == "**Email / Letter Writer**":
-                    container.write("Video Script Output")
-                if SELECTION == "**Interview Question Generation**":
-                    container.write("Video Description Output")
-                if SELECTION == "**Product Description Creator**":
-                    container.write("Image Caption Output")
-                if SELECTION == "**Message / SMS Writer**":
-                    container.write("Hashtag Output")
+                if SELECTION == "**Blog Post Idea Generator**":
+                    container.write(BLOG_POST_IDEA_GENERATOR(VARIANT, TONE, BLOG_IDEA_TARGET, BLOG_IDEA_NICHE, BLOG_IDEA_LENGTH, BLOG_IDEA_KEYWORDS, BLOG_IDEA_CTA))
+                if SELECTION == "**Blog Post Writer**":
+                    container.write(BLOG_POST_GENERATOR(VARIANT, TONE, BLOG_POST_TOPIC, BLOG_POST_TARGET, BLOG_POST_LENGTH, BLOG_POST_CONTENT))
+                if SELECTION == "**News Article Writer**":
+                    container.write(NEWS_ARTICLE_WRITER(VARIANT, TONE, NEWS_ARTICLE_NICHE, NEWS_ARTICLE_TARGET, NEWS_ARTICLE_LENGTH, NEWS_ARTICLE_CONTENT, NEWS_ARTICLE_DATE))
+                if SELECTION == "**Creative Writing Prompts**":
+                    container.write(CREATIVE_WRITING_PROMPT(VARIANT, TONE, CREATIVE_WRITING_GENRE, CREATIVE_WRITING_SETTING, CREATIVE_WRITING_THEME, CREATIVE_WRITING_TYPE, CREATIVE_WRITING_UNIQUE))
+                if SELECTION == "**Video Script Writer**":
+                    container.write(VIDEO_SCRIPT_WRITER(VARIANT, TONE, VIDEO_SCRIPT_TYPE, VIDEO_SCRIPT_TARGET, VIDEO_SCRIPT_CTA, VIDEO_SCRIPT_KEYWORDS, VIDEO_SCRIPT_LENGTH))
+                if SELECTION == "**Video Description Writer**":
+                    container.write(VIDEO_DESCRIPTION_WRITER(VARIANT, TONE, VIDEO_DESCRIPTION_TITLE, VIDEO_DESCRIPTION_TARGET, VIDEO_DESCRIPTION_TYPE, VIDEO_DESCRIPTION_KEYWORDS, VIDEO_DESCRIPTION_CTA, VIDEO_DESCRIPTION_CONTENT))
+                if SELECTION == "**Hashtag Generator**":
+                    container.write(HASHTAG_GENERATOR(VARIANT, TONE, HASHTAG_TOPIC, HASHTAG_NAME, HASHTAG_TARGET, HASHTAG_KEYWORDS))
+
 
 
     if MODE_SELECTION == "**Marketing & Advertising Specialists**":
-        with st.container(border=True):
-            DASH_COL1, DASH_COL2 = st.columns(2, gap="medium")
+        DASH_COL1, DASH_COL2 = st.columns(2, gap="medium")
 
         with DASH_COL1:
 
@@ -629,30 +619,30 @@ elif st.session_state.page == "two":
                 container.write("**Generated content will be displayed here**")
             if GENERATE:
                 if SELECTION == "**Content Promotion Posts**":
-                    container.write("Content Promotion Output")
+                    container.write(CONTENT_PROMOTION_GENERATOR(VARIANT, TONE, CONTENT_PROMO_TYPE, CONTENT_PROMO_PLATFORM, CONTENT_PROMO_TARGET, CONTENT_PROMO_KEYWORDS, CONTENT_PROMO_CTA))
                 if SELECTION == "**Ad Copywriter**":
-                    container.write("Ad Output")
+                    container.write(AD_COPYWRITER(VARIANT, TONE, AD_COPY_FORMAT, AD_COPY_TARGET, AD_COPY_LENGTH, AD_COPY_CONTENT))
                 if SELECTION == "**Call to Action Generator**":
-                    container.write("Call to Action Output")
+                    container.write(CALL_TO_ACTION_GENERATOR(VARIANT, TONE, CTA_CONTENT, CTA_TARGET, CTA_ACTION))
                 if SELECTION == "**AIDA Copywriter**":
-                    container.write("AIDA Output")
+                    container.write(AIDA_COPYWRITER(VARIANT, TONE, AIDA_COPY_CONTENT, AIDA_COPY_TARGET, AIDA_COPY_CTA, AIDA_COPY_PROBLEM, AIDA_COPY_SOLUTION, AIDA_COPY_BENEFIT))
                 if SELECTION == "**PAS Copywriter**":
-                    container.write("PAS Output")
+                    container.write(PAS_COPYWRITER(VARIANT, TONE, PAS_COPY_CONTENT, PAS_COPY_TARGET, PAS_COPY_CTA, PAS_COPY_PROBLEM, PAS_COPY_SOLUTION, PAS_COPY_AGITATION))
                 if SELECTION == "**Google Ads Generator**":
-                    container.write("Google Ads Output")
+                    container.write(GOOGLE_AD_GENERATOR(VARIANT, TONE, GOOGLE_AD_KEYWORDS, GOOGLE_AD_CTA, GOOGLE_AD_URL, GOOGLE_AD_CONTENT))
                 if SELECTION == "**Social Media Ads Generator**":
-                    container.write("Social Media Ads Output")
+                    container.write(SOCIAL_MEDIA_AD_GENERATOR(VARIANT, TONE, SOCIAL_MEDIA_AD_PLATFORM, SOCIAL_MEDIA_AD_FORMAT, SOCIAL_MEDIA_AD_CTA, SOCIAL_MEDIA_AD_TARGET, SOCIAL_MEDIA_AD_CONTENT))
                 if SELECTION == "**Marketing Email Writer**":
-                    container.write("Marketing Email Output")
+                    container.write(MARKETING_EMAIL_WRITER(VARIANT, TONE, EMAIL_WRITER_TYPE, EMAIL_WRITER_TARGET, EMAIL_WRITER_CTA, EMAIL_WRITER_CONTENT))
                 if SELECTION == "**LinkedIn Post Generator**":
-                    container.write("LinkedIn Post Output")
+                    container.write(LINKEDIN_POST_GENERATOR(VARIANT, TONE, LINKEDIN_POST_TYPE, LINKEDIN_POST_TARGET, LINKEDIN_POST_CTA, LINKEDIN_POST_CONTENT))
                 if SELECTION == "**Facebook Post Generator**":
-                    container.write("Facebook Post Output")
+                    container.write(FACEBOOK_POST_GENERATOR(VARIANT, TONE, FACEBOOK_POST_TYPE, FACEBOOK_POST_TARGET, FACEBOOK_POST_CTA, FACEBOOK_POST_CONTENT))
+
 
 
     if MODE_SELECTION == "**Job Seekers & Professionals**":
-        with st.container(border=True):
-            DASH_COL1, DASH_COL2 = st.columns(2, gap="medium")
+        DASH_COL1, DASH_COL2 = st.columns(2, gap="medium")
 
         with DASH_COL1:
 
@@ -743,16 +733,21 @@ elif st.session_state.page == "two":
 
                 # # # # # M O D E 3 # # # # #
 
-                if SELECTION == "**Call to Action Generator**":
+                if SELECTION == "**Job description generator**":
                     SMOL1, SMOL2, SMOL3 = st.columns(3)
                     with SMOL1:
-                        CTA_CONTENT = st.text_input("Content", key="content3")
+                        JOB_DESCRIPTION_JOB = st.text_input("Title for Job Description")
                     with SMOL2:
-                        CTA_TARGET = st.text_input("Target Audience", key="target3")
+                        JOB_DESCRIPTION_COMPANY = st.text_input("Company Name for Description")
                     with SMOL3:
-                        CTA_ACTION = st.selectbox("Desired Action", options=("Visit website", "Download a resource", "Register for an event", "Contact us", "Make a purchase", "Sign up for a newsletter", "Follow on social media"), key="cta3")
-
-                    if CTA_CONTENT and CTA_TARGET and CTA_ACTION:
+                        JOB_DESCRIPTION_INDUSTRY = st.text_input("Industry / Domain")
+                    SMOL4, SMOL5 = st.columns([2,1])
+                    with SMOL4:
+                        JOB_DESCRIPTION_RESPONSIBILITIES = st.text_area("Key Responsibilities")
+                    with SMOL5:
+                        JOB_DESCRIPTION_EXPERIENCE = st.slider("Required Years of Experience", 0, 15, 5)
+                    
+                    if JOB_DESCRIPTION_JOB and JOB_DESCRIPTION_COMPANY and JOB_DESCRIPTION_INDUSTRY and JOB_DESCRIPTION_EXPERIENCE and JOB_DESCRIPTION_RESPONSIBILITIES:
                         VALID = True
 
                 # # # # # M O D E 4 # # # # #
@@ -782,7 +777,7 @@ elif st.session_state.page == "two":
                 if SELECTION == "**Document summarizer**":
                     SMOL1, SMOL2 = st.columns(2)
                     with SMOL1:
-                        DOC_SUMMARY_FILE = st.text_input("File", key="file5")
+                        DOC_SUMMARY_FILE = st.file_uploader(":blue[Document File]", type="pdf")
                     with SMOL2:
                         DOC_SUMMARY_LENGTH = st.selectbox("Summary Length", options=("Short (1-2 paragraphs)", "Medium (3-5 paragraphs)", "Long (6+ paragraphs)"), key="length5")
                     SMOL3, SMOL4 = st.columns([1,2])
@@ -881,31 +876,39 @@ elif st.session_state.page == "two":
             if not GENERATE:
                 container.write("**Generated content will be displayed here**")
             if GENERATE:
-                if SELECTION == "**Content Promotion Posts**":
-                    container.write("Content Promotion Output")
-                if SELECTION == "**Ad Copywriter**":
-                    container.write("Ad Output")
-                if SELECTION == "**Call to Action Generator**":
-                    container.write("Call to Action Output")
-                if SELECTION == "**AIDA Copywriter**":
-                    container.write("AIDA Output")
-                if SELECTION == "**PAS Copywriter**":
-                    container.write("PAS Output")
-                if SELECTION == "**Google Ads Generator**":
-                    container.write("Google Ads Output")
-                if SELECTION == "**Social Media Ads Generator**":
-                    container.write("Social Media Ads Output")
-                if SELECTION == "**Marketing Email Writer**":
-                    container.write("Marketing Email Output")
-                if SELECTION == "**LinkedIn Post Generator**":
-                    container.write("LinkedIn Post Output")
-                if SELECTION == "**Facebook Post Generator**":
-                    container.write("Facebook Post Output")
+                if SELECTION == "**Job application writer (resume & cover letter)**":
+                    container.write(JOB_APPLICATION_WRITER(VARIANT, TONE, JOB_APPLICATION_JOB, JOB_APPLICATION_INDUSTRY, JOB_APPLICATION_EXPERIENCE, JOB_APPLICATION_TARGET, JOB_APPLICATION_REQUIREMENTS, JOB_APPLICATION_WORK_TEXT, JOB_APPLICATION_PERSONAL_TEXT, JOB_APPLICATION_SKILLS_TEXT, JOB_APPLICATION_EDUCATION_TEXT))
+                if SELECTION == "**Interview question generator**":
+                    container.write(INTERVIEW_QUESTION_GENERATOR(VARIANT, TONE, INTERVIEW_NUMBER, INTERVIEW_JOB, INTERVIEW_DESCRIPTION, INTERVIEW_STAGE, INTERVIEW_CATEGORY))
+                if SELECTION == "**Job description generator**":
+                    container.write(JOB_DESCRIPTION_GENERATOR(VARIANT, TONE, JOB_DESCRIPTION_JOB, JOB_DESCRIPTION_COMPANY, JOB_DESCRIPTION_INDUSTRY, JOB_DESCRIPTION_EXPERIENCE, JOB_DESCRIPTION_RESPONSIBILITIES))
+                if SELECTION == "**Professional email writer**":
+                    container.write(PROFESSIONAL_EMAIL_WRITER(VARIANT, TONE, PRO_EMAIL_TYPE, PRO_EMAIL_RECIPIENT, PRO_EMAIL_PURPOSE, PRO_EMAIL_INFO_TEXT))
+                if SELECTION == "**Document summarizer**":
+                    reader = PdfReader(DOC_SUMMARY_FILE)
+                    BOOK = """"""
+                    PAGE = ""
+                    number_of_pages = len(reader.pages)
+                    for i in range(number_of_pages):
+                        PAGE = f"\n\n\n- - - - - - Page Number {i+1} - - - - - -\n\n"
+                        BOOK = BOOK + PAGE
+                        page = reader.pages[i]
+                        text = page.extract_text()
+                        BOOK = BOOK + text
+                    container.write(DOCUMENT_SUMMARIZER(VARIANT, TONE, BOOK, DOC_SUMMARY_LENGTH, DOC_SUMMARY_POINTS_TEXT))
+                if SELECTION == "**Meeting notes summarizer**":
+                    container.write(MEETING_NOTES_SUMMARIZER(VARIANT, TONE, MEETING_SUMMARY_FILE, MEETING_SUMMARY_LENGTH, MEETING_SUMMARY_TOPIC))
+                if SELECTION == "**Cover letter generator**":
+                    container.write(COVER_LETTER_GENERATOR(VARIANT, TONE, COVER_LETTER_JOB, COVER_LETTER_COMPANY, COVER_LETTER_SKILLS, COVER_LETTER_EXPERIENCE))
+                if SELECTION == "**Business pitch generator**":
+                    container.write(BUSINESS_PITCH_GENERATOR(VARIANT, TONE, PITCH_FORMAT, PITCH_BUSINESS, PITCH_PROBLEM, PITCH_SOLUTION, PITCH_TARGET))
+                if SELECTION == "**Meeting agenda generator**":
+                    container.write(MEETING_AGENDA_GENERATOR(VARIANT, TONE, MEETING_AGENDA_TOPIC, MEETING_AGENDA_PURPOSE, MEETING_AGENDA_ATTENDEES, MEETING_AGENDA_POINTS, MEETING_AGENDA_TIME, MEETING_AGENDA_ACTION))
+
 
 
     if MODE_SELECTION == "**SEO Professionals**":
-        with st.container(border=True):
-            DASH_COL1, DASH_COL2 = st.columns(2, gap="medium")
+        DASH_COL1, DASH_COL2 = st.columns(2, gap="medium")
 
         with DASH_COL1:
 
@@ -1026,18 +1029,6 @@ elif st.session_state.page == "two":
                     if PRODUCT_DESCRIPTION_NAME and PRODUCT_DESCRIPTION_TARGET and PRODUCT_DESCRIPTION_CATEGORY and PRODUCT_DESCRIPTION_FEATURES:
                         VALID = True
 
-                # # # # # M O D E 8 # # # # #
-
-                if SELECTION == "**Image caption writer**":
-                    SMOL1, SMOL2 = st.columns(2)
-                    with SMOL1:
-                        IMG_CAPTION_FILE = st.text_input("Img File", key="file8")
-                    with SMOL2:
-                        IMG_CAPTION_KEYWORDS = st.text_input("Keywords", key="keywords8")
-                    
-                    if IMG_CAPTION_FILE and IMG_CAPTION_KEYWORDS:
-                        VALID = True        
-
 
             GENERATE = st.button("Generate", use_container_width=True, type="primary", key="button1")
 
@@ -1047,31 +1038,25 @@ elif st.session_state.page == "two":
             if not GENERATE:
                 container.write("**Generated content will be displayed here**")
             if GENERATE:
-                if SELECTION == "**Content Promotion Posts**":
-                    container.write("Content Promotion Output")
-                if SELECTION == "**Ad Copywriter**":
-                    container.write("Ad Output")
-                if SELECTION == "**Call to Action Generator**":
-                    container.write("Call to Action Output")
-                if SELECTION == "**AIDA Copywriter**":
-                    container.write("AIDA Output")
-                if SELECTION == "**PAS Copywriter**":
-                    container.write("PAS Output")
-                if SELECTION == "**Google Ads Generator**":
-                    container.write("Google Ads Output")
-                if SELECTION == "**Social Media Ads Generator**":
-                    container.write("Social Media Ads Output")
-                if SELECTION == "**Marketing Email Writer**":
-                    container.write("Marketing Email Output")
-                if SELECTION == "**LinkedIn Post Generator**":
-                    container.write("LinkedIn Post Output")
-                if SELECTION == "**Facebook Post Generator**":
-                    container.write("Facebook Post Output")
+                if SELECTION == "**SEO content writer**":
+                    container.write(SEO_CONTENT_WRITER(VARIANT, TONE, SEO_CONTENT_TYPES, SEO_CONTENT_LENGTH, SEO_CONTENT_TARGET, SEO_CONTENT_KEYWORDS))
+                if SELECTION == "**Keyword extractor**":
+                    container.write(KEYWORD_EXTRACTOR(VARIANT, TONE, KEYWORD_EXTRACT_CONTENT, KEYWORD_EXTRACT_COUNT, KEYWORD_EXTRACT_TYPE))
+                if SELECTION == "**AI keyword generator**":
+                    container.write(KEYWORD_GENERATOR(VARIANT, TONE, KEYWORD_GENERATOR_TARGET, KEYWORD_GENERATOR_COUNT, KEYWORD_GENERATOR_TYPE, KEYWORD_GENERATOR_SEED))
+                if SELECTION == "**Meta title generator**":
+                    container.write(META_TITLE_GENERATOR(VARIANT, TONE, META_TITLE_PAGE, META_TITLE_KEYWORDS, META_TITLE_LIMIT))
+                if SELECTION == "**Meta description generator**":
+                    container.write(META_DESCRIPTION_GENERATOR(VARIANT, TONE, META_DESCRIPTION_PAGE, META_DESCRIPTION_KEYWORDS, META_DESCRIPTION_LIMIT, META_DESCRIPTION_CONTENT))
+                if SELECTION == "**Website copywriter**":
+                    container.write(WEBSITE_COPYWRITER(VARIANT, TONE, WEBSITE_COPY_TYPE, WEBSITE_COPY_TARGET, WEBSITE_COPY_CONTENT))
+                if SELECTION == "**Product description generator**":
+                    container.write(PRODUCT_DESCRIPTION_GENERATOR(VARIANT, TONE, PRODUCT_DESCRIPTION_NAME, PRODUCT_DESCRIPTION_CATEGORY, PRODUCT_DESCRIPTION_FEATURES, PRODUCT_DESCRIPTION_TARGET, TONE))
+
 
 
     if MODE_SELECTION == "**Students & Educators**":
-        with st.container(border=True):
-            DASH_COL1, DASH_COL2 = st.columns(2, gap="medium")
+        DASH_COL1, DASH_COL2 = st.columns(2, gap="medium")
 
         with DASH_COL1:
 
@@ -1222,9 +1207,9 @@ elif st.session_state.page == "two":
                     container.write(STUDY_GUIDE_CREATOR(STUDY_GUIDE_TYPE, BOOK))
 
 
+
     if MODE_SELECTION == "**Personal Use & Creativity**":
-        with st.container(border=True):
-            DASH_COL1, DASH_COL2 = st.columns(2, gap="medium")
+        DASH_COL1, DASH_COL2 = st.columns(2, gap="medium")
 
         with DASH_COL1:
 
@@ -1343,31 +1328,23 @@ elif st.session_state.page == "two":
             if not GENERATE:
                 container.write("**Generated content will be displayed here**")
             if GENERATE:
-                if SELECTION == "**Content Promotion Posts**":
-                    container.write("Content Promotion Output")
-                if SELECTION == "**Ad Copywriter**":
-                    container.write("Ad Output")
-                if SELECTION == "**Call to Action Generator**":
-                    container.write("Call to Action Output")
-                if SELECTION == "**AIDA Copywriter**":
-                    container.write("AIDA Output")
-                if SELECTION == "**PAS Copywriter**":
-                    container.write("PAS Output")
-                if SELECTION == "**Google Ads Generator**":
-                    container.write("Google Ads Output")
-                if SELECTION == "**Social Media Ads Generator**":
-                    container.write("Social Media Ads Output")
-                if SELECTION == "**Marketing Email Writer**":
-                    container.write("Marketing Email Output")
-                if SELECTION == "**LinkedIn Post Generator**":
-                    container.write("LinkedIn Post Output")
-                if SELECTION == "**Facebook Post Generator**":
-                    container.write("Facebook Post Output")
+                if SELECTION == "**Song Lyrics Generator**":
+                    container.write(SONG_LYRICS_GENERATOR(VARIANT, TONE, SONG_GENRE, SONG_THEME, SONG_KEYWORDS))
+                if SELECTION == "**Poem Generator**":
+                    container.write(POEM_GENERATOR(VARIANT, TONE, POEM_TYPE, POEM_THEME, POEM_KEYWORDS))
+                if SELECTION == "**Story Generator**":
+                    container.write(STORY_GENERATOR(VARIANT, TONE, STORY_GENRE, STORY_THEME, STORY_SETTING, STORY_CHARACTERS, STORY_PLOT))
+                if SELECTION == "**Personalized Recipe Generator**":
+                    container.write(PERSONALIZED_RECIPE_GENERATOR(VARIANT, TONE, RECIPE_CUISINE, RECIPE_RESTRICTION, RECIPE_LEVEL, RECIPE_INGREDIENTS))
+                if SELECTION == "**Recipe from Ingredients**":
+                    container.write(RECIPE_GENERATOR(VARIANT, TONE, QUICK_RECIPE_CUISINE, QUICK_RECIPE_TYPE, QUICK_RECIPE_INGREDIENTS))
+                if SELECTION == "**Personalized Email Writer**":
+                    container.write(PERSONALIZED_EMAIL_GENERATOR(VARIANT, TONE, PERSONALIZED_EMAIL_CONTENT, PERSONALIZED_EMAIL_TYPE, PERSONALIZED_EMAIL_RECIPIENT, PERSONALIZED_EMAIL_EXTRA_CONTENT))
+
 
 
     if MODE_SELECTION == "**Coding & Technical Tools**":
-        with st.container(border=True):
-            DASH_COL1, DASH_COL2 = st.columns(2, gap="medium")
+        DASH_COL1, DASH_COL2 = st.columns(2, gap="medium")
 
         with DASH_COL1:
 
@@ -1425,31 +1402,15 @@ elif st.session_state.page == "two":
             if not GENERATE:
                 container.write("**Generated content will be displayed here**")
             if GENERATE:
-                if SELECTION == "**Content Promotion Posts**":
-                    container.write("Content Promotion Output")
-                if SELECTION == "**Ad Copywriter**":
-                    container.write("Ad Output")
-                if SELECTION == "**Call to Action Generator**":
-                    container.write("Call to Action Output")
-                if SELECTION == "**AIDA Copywriter**":
-                    container.write("AIDA Output")
-                if SELECTION == "**PAS Copywriter**":
-                    container.write("PAS Output")
-                if SELECTION == "**Google Ads Generator**":
-                    container.write("Google Ads Output")
-                if SELECTION == "**Social Media Ads Generator**":
-                    container.write("Social Media Ads Output")
-                if SELECTION == "**Marketing Email Writer**":
-                    container.write("Marketing Email Output")
-                if SELECTION == "**LinkedIn Post Generator**":
-                    container.write("LinkedIn Post Output")
-                if SELECTION == "**Facebook Post Generator**":
-                    container.write("Facebook Post Output")
+                if SELECTION == "**Code Generator**":
+                    container.write(CODE_GENERATOR(VARIANT, TONE, CODE_INSTRUCTION, CODE_LANGUAGE, CODE_EXAMPLE_TEXT))
+                if SELECTION == "**Technical Documentation Writer**":
+                    container.write(TECHNICAL_DOCUMENTATION_WRITER(VARIANT, TONE, DOCUMENTATION_TYPE, DOCUMENTATION_LEVEL, DOCUMENTATION_CONTENT))
+
 
 
     if MODE_SELECTION == "**Additional Tools**":
-        with st.container(border=True):
-            DASH_COL1, DASH_COL2 = st.columns(2, gap="medium")
+        DASH_COL1, DASH_COL2 = st.columns(2, gap="medium")
 
         with DASH_COL1:
 
@@ -1542,25 +1503,18 @@ elif st.session_state.page == "two":
             if not GENERATE:
                 container.write("**Generated content will be displayed here**")
             if GENERATE:
-                if SELECTION == "**Content Promotion Posts**":
-                    container.write("Content Promotion Output")
-                if SELECTION == "**Ad Copywriter**":
-                    container.write("Ad Output")
-                if SELECTION == "**Call to Action Generator**":
-                    container.write("Call to Action Output")
-                if SELECTION == "**AIDA Copywriter**":
-                    container.write("AIDA Output")
-                if SELECTION == "**PAS Copywriter**":
-                    container.write("PAS Output")
-                if SELECTION == "**Google Ads Generator**":
-                    container.write("Google Ads Output")
-                if SELECTION == "**Social Media Ads Generator**":
-                    container.write("Social Media Ads Output")
-                if SELECTION == "**Marketing Email Writer**":
-                    container.write("Marketing Email Output")
-                if SELECTION == "**LinkedIn Post Generator**":
-                    container.write("LinkedIn Post Output")
-                if SELECTION == "**Facebook Post Generator**":
-                    container.write("Facebook Post Output")
+                if SELECTION == "**Grammar Checker & Improver**":
+                    container.write(GRAMMAR_CHECKER(VARIANT, TONE, GRAMMAR_CONTENT, GRAMMAR_LEVEL))
+                if SELECTION == "**Sentence Reworder**":
+                    container.write(SENTENCE_REWORDER(VARIANT, TONE, REWORD_CONTENT))
+                if SELECTION == "**Text Inflator**":
+                    container.write(TEXT_INFLATOR(VARIANT, TONE, INFLATOR_CONTENT, INFLATOR_LEVEL))
+                if SELECTION == "**Sentence Shortener**":
+                    container.write(SENTENCE_SHORTENER(VARIANT, TONE, SHORTENER_CONTENT, SHORTENER_LEVEL))
+                if SELECTION == "**Summarizer**":
+                    container.write(SUMMARIZER(VARIANT, TONE, SUMMARY_CONTENT, SUMMARY_LENGTH))
+                if SELECTION == "**Translator**":
+                    container.write(TRANSLATOR(VARIANT, TONE, TRANSLATOR_CONTENT, TRANSLATOR_LANGUAGE))
+
 
 
