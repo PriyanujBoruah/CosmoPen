@@ -1,5 +1,4 @@
 import streamlit as st
-import mysql.connector
 from datetime import date, timedelta
 import google.generativeai as genai
 from pypdf import PdfReader
