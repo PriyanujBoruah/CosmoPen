@@ -399,8 +399,10 @@ elif st.session_state.page == "two":
                     if HASHTAG_TOPIC and HASHTAG_NAME and HASHTAG_TARGET and HASHTAG_KEYWORDS:
                         VALID = True
 
-
-            GENERATE = st.button("Generate", use_container_width=True, type="primary", key="button1")
+            if VALID == True:
+                GENERATE = st.button("Generate", use_container_width=True, type="primary", key="button1")
+            if VALID == False:
+                GENERATE = st.button("Generate", use_container_width=True, type="primary", key="button1", disabled=True)
 
 
         with DASH_COL2:
@@ -612,7 +614,10 @@ elif st.session_state.page == "two":
                         VALID = True
 
 
-            GENERATE = st.button("Generate", use_container_width=True, type="primary", key="button1")
+            if VALID == True:
+                GENERATE = st.button("Generate", use_container_width=True, type="primary", key="button1")
+            if VALID == False:
+                GENERATE = st.button("Generate", use_container_width=True, type="primary", key="button1", disabled=True)
 
 
         with DASH_COL2:
@@ -870,7 +875,10 @@ elif st.session_state.page == "two":
                         VALID = True
 
 
-            GENERATE = st.button("Generate", use_container_width=True, type="primary", key="button1")
+            if VALID == True:
+                GENERATE = st.button("Generate", use_container_width=True, type="primary", key="button1")
+            if VALID == False:
+                GENERATE = st.button("Generate", use_container_width=True, type="primary", key="button1", disabled=True)
 
 
         with DASH_COL2:
@@ -1032,7 +1040,10 @@ elif st.session_state.page == "two":
                         VALID = True
 
 
-            GENERATE = st.button("Generate", use_container_width=True, type="primary", key="button1")
+            if VALID == True:
+                GENERATE = st.button("Generate", use_container_width=True, type="primary", key="button1")
+            if VALID == False:
+                GENERATE = st.button("Generate", use_container_width=True, type="primary", key="button1", disabled=True)
 
 
         with DASH_COL2:
@@ -1142,9 +1153,9 @@ elif st.session_state.page == "two":
                     if STUDY_GUIDE_TYPE and STUDY_GUIDE_BOOK:
                         VALID = True      
 
-            if VALID:
+            if VALID == True:
                 GENERATE = st.button("Generate", use_container_width=True, type="primary", key="button1")
-            else:
+            if VALID == False:
                 GENERATE = st.button("Generate", use_container_width=True, type="primary", key="button1", disabled=True)
 
 
@@ -1322,7 +1333,10 @@ elif st.session_state.page == "two":
                         VALID = True
 
 
-            GENERATE = st.button("Generate", use_container_width=True, type="primary", key="button1")
+            if VALID == True:
+                GENERATE = st.button("Generate", use_container_width=True, type="primary", key="button1")
+            if VALID == False:
+                GENERATE = st.button("Generate", use_container_width=True, type="primary", key="button1", disabled=True)
 
 
         with DASH_COL2:
@@ -1497,7 +1511,10 @@ elif st.session_state.page == "two":
                         VALID = True
                         
 
-            GENERATE = st.button("Generate", use_container_width=True, type="primary", key="button1")
+            if VALID == True:
+                GENERATE = st.button("Generate", use_container_width=True, type="primary", key="button1")
+            if VALID == False:
+                GENERATE = st.button("Generate", use_container_width=True, type="primary", key="button1", disabled=True)
 
 
         with DASH_COL2:
