@@ -62,9 +62,11 @@ LANGUAGES_FOR_TRANSLATION = [
     'Slovenian', 'Swahili', 'Tamil', 'Telugu', 'Urdu'
 ]
 LANGUAGES_FOR_CODE = [
-    'Python', 'JavaScript', 'Java',
-    'C++', 'HTML', 'CSS',
-    'SQL', 'Swift', 'Go'
+    'Python', 'R', 'C#',
+    'C++', 'Java', 'HTML',
+    'CSS', 'JavaScript', 'SQL',
+    'Swift', 'Go', 'Kotlin',
+    'Ruby', 'PHP'
 ]
 
 GOOGLE_API_KEY = 'AIzaSyDmF4D2f_ibz6UZi_sFZyydkSmUrz7x8_k'
