@@ -46,19 +46,19 @@ TONES_TIER1 = [
         "Urgent", "Serious", "Apologetic", "Excited", "Grateful" 
     ]
 LANGUAGES_FOR_TRANSLATION = [
-    'English', 'French', 'German', 'Spanish'
-    'Italian', 'Portuguese', 'Dutch', 'Swedish'
-    'Norwegian', 'Danish', 'Arabic', 'Chinese (Simplified)'
-    'Chinese (Traditional)', 'Japanese', 'Korean', 'Russian'
-    'Hindi', 'Finnish', 'Polish', 'Romanian'
-    'Turkish', 'Ukrainian', 'Hungarian', 'Czech'
-    'Slovak', 'Bulgarian', 'Greek', 'Persian'
-    'Hebrew', 'Vietnamese', 'Thai', 'Indonesian'
-    'Malay', 'Filipino', 'Afrikaans', 'Albanian'
-    'Amharic', 'Armenian', 'Azerbaijani', 'Bengali'
-    'Catalan', 'Croatian', 'Estonian', 'Gujarati'
-    'Icelandic', 'Kannada', 'Latvian', 'Lithuanian'
-    'Macedonian', 'Malayalam', 'Marathi', 'Serbian'
+    'English', 'French', 'German', 'Spanish',
+    'Italian', 'Portuguese', 'Dutch', 'Swedish',
+    'Norwegian', 'Danish', 'Arabic', 'Chinese (Simplified)',
+    'Chinese (Traditional)', 'Japanese', 'Korean', 'Russian',
+    'Hindi', 'Finnish', 'Polish', 'Romanian',
+    'Turkish', 'Ukrainian', 'Hungarian', 'Czech',
+    'Slovak', 'Bulgarian', 'Greek', 'Persian',
+    'Hebrew', 'Vietnamese', 'Thai', 'Indonesian',
+    'Malay', 'Filipino', 'Afrikaans', 'Albanian',
+    'Amharic', 'Armenian', 'Azerbaijani', 'Bengali',
+    'Catalan', 'Croatian', 'Estonian', 'Gujarati',
+    'Icelandic', 'Kannada', 'Latvian', 'Lithuanian',
+    'Macedonian', 'Malayalam', 'Marathi', 'Serbian',
     'Slovenian', 'Swahili', 'Tamil', 'Telugu', 'Urdu'
 ]
 LANGUAGES_FOR_CODE = [
