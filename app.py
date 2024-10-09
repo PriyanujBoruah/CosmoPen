@@ -4,7 +4,6 @@ from datetime import date, timedelta
 import google.generativeai as genai
 from pypdf import PdfReader
 from generative_functions import *
-from users import USERS
 
 st.set_page_config(page_title="CosmoPen", page_icon="logo.png", layout="wide", initial_sidebar_state="collapsed", menu_items=None)
 
