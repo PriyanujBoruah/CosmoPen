@@ -3,38 +3,154 @@ import mysql.connector
 from datetime import date, timedelta
 import google.generativeai as genai
 from pypdf import PdfReader
-from generative_functions import (BLOG_POST_IDEA_GENERATOR, BLOG_POST_GENERATOR, NEWS_ARTICLE_WRITER, CREATIVE_WRITING_PROMPT,
-                                  VIDEO_SCRIPT_WRITER, VIDEO_DESCRIPTION_WRITER, HASHTAG_GENERATOR, CONTENT_PROMOTION_GENERATOR,
-                                  AD_COPYWRITER, CALL_TO_ACTION_GENERATOR, AIDA_COPYWRITER, PAS_COPYWRITER, GOOGLE_AD_GENERATOR,
-                                  SOCIAL_MEDIA_AD_GENERATOR, MARKETING_EMAIL_WRITER, LINKEDIN_POST_GENERATOR, FACEBOOK_POST_GENERATOR,
-                                  JOB_APPLICATION_WRITER, INTERVIEW_QUESTION_GENERATOR, JOB_DESCRIPTION_GENERATOR, PROFESSIONAL_EMAIL_WRITER,
-                                  DOCUMENT_SUMMARIZER, MEETING_NOTES_SUMMARIZER, COVER_LETTER_GENERATOR, BUSINESS_PITCH_GENERATOR,
-                                  MEETING_AGENDA_GENERATOR, SEO_CONTENT_WRITER, KEYWORD_EXTRACTOR, KEYWORD_GENERATOR, META_TITLE_GENERATOR,
-                                  META_DESCRIPTION_GENERATOR, WEBSITE_COPYWRITER, PRODUCT_DESCRIPTION_GENERATOR, RESEARCH_PAPER_SUMMARIZER,
-                                  CHAPTER_EXPLAINER, QUESTION_PAPER_GENERATION, STUDY_GUIDE_CREATOR, SONG_LYRICS_GENERATOR, POEM_GENERATOR,
-                                  STORY_GENERATOR, PERSONALIZED_RECIPE_GENERATOR, RECIPE_GENERATOR, PERSONALIZED_EMAIL_GENERATOR, CODE_GENERATOR,
-                                  TECHNICAL_DOCUMENTATION_WRITER, GRAMMAR_CHECKER, SENTENCE_REWORDER, TEXT_INFLATOR, SENTENCE_SHORTENER,
-                                  SUMMARIZER, TRANSLATOR) 
+from generative_functions import *
 from users import USERS
 
-st.set_page_config(page_title="CosmoPen", page_icon=None, layout="wide", initial_sidebar_state="collapsed", menu_items=None)
+st.set_page_config(page_title="CosmoPen", page_icon="logo.png", layout="wide", initial_sidebar_state="collapsed", menu_items=None)
 
+connection = mysql.connector.connect(
+  host = "gateway01.ap-southeast-1.prod.aws.tidbcloud.com",
+  port = 4000,
+  user = "2mF9jreccF49KBR.root",
+  password = "Jcwu6U9eVVSwRTjt",
+  database = "userlist",
+  ssl_ca = "isrgrootx1.pem",
+  ssl_verify_cert = True,
+  ssl_verify_identity = True
+)
+
+
+
+
+# # # # #    D A T A B A S E    F U N C T I O N S    # # # # #
+
+# C H E C K    I F    E M A I L    E X I S T S
+def email_exists(connection, email):
+    cursor = connection.cursor()
+    sql = "SELECT 1 FROM users WHERE email = %s"
+    values = (email,) 
+
+    cursor.execute(sql, values)
+    result = cursor.fetchone()
+
+    return bool(result)
+# G E T    P I L O T    I D    B Y    E M A I L
+def get_pilot_id_by_email(connection, email):
+    cursor = connection.cursor()
+    sql = "SELECT pilot_id FROM users WHERE email = %s" 
+    values = (email,)
+
+    cursor.execute(sql, values)
+    result = cursor.fetchone()
+
+    return result[0] if result else None
+# G E T    T I E R    B Y    E M A I L
+def get_tier_by_email(connection, email):
+    cursor = connection.cursor()
+    sql = "SELECT tier FROM users WHERE email = %s" 
+    values = (email,)
+
+    cursor.execute(sql, values)
+    result = cursor.fetchone()
+
+    return result[0] if result else None
+# C H E C K    C R E D I T    B Y    E M A I L
+def check_credit(connection, email):
+    """Checks and prints the daily_remaining and total_remaining rate limits 
+       for a given email on the CURRENT date.
+    """
+
+    cursor = connection.cursor()
+    sql = """
+        SELECT credit 
+        FROM users
+        WHERE email = %s;
+    """
+    values = (email,) 
+
+    cursor.execute(sql, values)
+    result = cursor.fetchone()
+
+    if result:
+        CREDIT = result[0]
+        return CREDIT
+    else:
+        return "Error: No rate limit information found"
+# D E C R E A S E    1    C R E D I T    B Y    E M A I L
+def decrease_credit_1(connection, email):
+    cursor = connection.cursor()
+    sql = "UPDATE users SET credit = credit - 1 WHERE email = %s"
+    values = (email,)
+
+    try:
+        cursor.execute(sql, values)
+        connection.commit()
+        return True
+    except Exception as e:
+        print(f"Error decreasing credit: {e}")
+        connection.rollback()
+        return False
+# D E C R E A S E    2    C R E D I T    B Y    E M A I L
+def decrease_credit_2(connection, email):
+    cursor = connection.cursor()
+    sql = "UPDATE users SET credit = credit - 2 WHERE email = %s"
+    values = (email,)
+
+    try:
+        cursor.execute(sql, values)
+        connection.commit()
+        return True
+    except Exception as e:
+        print(f"Error decreasing credit: {e}")
+        connection.rollback()
+        return False
+# D E C R E A S E    3    C R E D I T    B Y    E M A I L
+def decrease_credit_3(connection, email):
+    cursor = connection.cursor()
+    sql = "UPDATE users SET credit = credit - 3 WHERE email = %s"
+    values = (email,)
+
+    try:
+        cursor.execute(sql, values)
+        connection.commit()
+        return True
+    except Exception as e:
+        print(f"Error decreasing credit: {e}")
+        connection.rollback()
+        return False
+
+
+
+
+
+# # # # #    L O G I N    P A G E    # # # # #
 def login_page():
     st.title("Welcome to CosmoPen")
     with st.container(border=True):
-        USER = st.text_input("Please Enter Pilot Id:")
+        email = st.text_input("Please enter your email:")
         if st.button("Login"):
-            if USER in USERS:
-                st.session_state.user = USER  # Store name in session state
+            email_to_check = email
+            if email_exists(connection, email_to_check):
+                st.session_state.email = email
                 st.session_state.page = "two"
-def dashboard():
-    if "user" in st.session_state:
-        USER = st.session_state.user
-        CREDIT = USERS.get(USER)
-    else:
-        st.write("USER not found. Please go back to Page One.")
+            else:
+                st.warning("Invalid Email")
 
-    return USER, CREDIT
+
+
+# # # # #    D A S H B O A R D    P A G E    # # # # #
+def dashboard():
+    if "email" in st.session_state:
+        EMAIL = st.session_state.email
+        PILOT_ID = get_pilot_id_by_email(connection, EMAIL)
+        CREDIT = check_credit(connection, EMAIL)
+        TIER = get_tier_by_email(connection, EMAIL)
+
+    else:
+        st.write("Name not found. Please go back to Page One.")
+
+    return EMAIL, PILOT_ID, CREDIT, TIER
+
 
 
 
@@ -78,6 +194,8 @@ modelx = genai.GenerativeModel('gemini-1.5-flash')
 OUTPUT = """"""
 VALID = False
 
+
+
 # --- App Flow Control ---
 if "page" not in st.session_state:
     st.session_state.page = "one"  # Default to page one
@@ -85,13 +203,22 @@ if "page" not in st.session_state:
 if st.session_state.page == "one":
     login_page()
 elif st.session_state.page == "two":
-    USER, CREDIT = dashboard()
-    HERO_COL1, HERO_COL2, HERO_COL3, HERO_COL4 = st.columns(4)
+    EMAIL, PILOT_ID, CREDIT, TIER = dashboard()
+    TIER_NAME = "None"
+    if TIER == 1:
+        TIER_NAME = "Advanced"
+    elif TIER == 2:
+        TIER_NAME = "Plus"
+    elif TIER == 3:
+        TIER_NAME = "Basic"
+    HERO_COL1, HERO_COL2, HERO_COL3, HERO_COL4 = st.columns(4, vertical_alignment="center")
 
     with HERO_COL1:
         with st.popover("**Account Settings**", use_container_width=True):
-            st.subheader(USER)
-            st.write(f"Remaining Credit: {CREDIT}")
+            st.write(f"Email: **{EMAIL}**")
+            st.write(f"Pilot ID: **{PILOT_ID}**")
+            st.write(f"TIER: **{TIER_NAME}**")
+            st.write(f"Credits: **{CREDIT}**")
 
 
     with HERO_COL2:
@@ -111,6 +238,8 @@ elif st.session_state.page == "two":
                 "Extra tools for even more tasks.",
             ],
         )
+    with HERO_COL3:
+        st.markdown(f"<h5 style='text-align: center; color: #000EEF; font-weight: bold;'>{MODE_SELECTION.strip('**')}</h5>", unsafe_allow_html=True)
     with HERO_COL4:
         if MODE_SELECTION == "**Content Creator & Influencer**":
 
@@ -411,19 +540,25 @@ elif st.session_state.page == "two":
                 container.write("**Generated content will be displayed here**")
             if GENERATE:
                 if SELECTION == "**Blog Post Idea Generator**":
-                    container.write(BLOG_POST_IDEA_GENERATOR(VARIANT, TONE, BLOG_IDEA_TARGET, BLOG_IDEA_NICHE, BLOG_IDEA_LENGTH, BLOG_IDEA_KEYWORDS, BLOG_IDEA_CTA))
+                    OUTPUT = BLOG_POST_IDEA_GENERATOR(VARIANT, TONE, BLOG_IDEA_TARGET, BLOG_IDEA_NICHE, BLOG_IDEA_LENGTH, BLOG_IDEA_KEYWORDS, BLOG_IDEA_CTA)
                 if SELECTION == "**Blog Post Writer**":
-                    container.write(BLOG_POST_GENERATOR(VARIANT, TONE, BLOG_POST_TOPIC, BLOG_POST_TARGET, BLOG_POST_LENGTH, BLOG_POST_CONTENT))
+                    OUTPUT = BLOG_POST_GENERATOR(VARIANT, TONE, BLOG_POST_TOPIC, BLOG_POST_TARGET, BLOG_POST_LENGTH, BLOG_POST_CONTENT)
                 if SELECTION == "**News Article Writer**":
-                    container.write(NEWS_ARTICLE_WRITER(VARIANT, TONE, NEWS_ARTICLE_NICHE, NEWS_ARTICLE_TARGET, NEWS_ARTICLE_LENGTH, NEWS_ARTICLE_CONTENT, NEWS_ARTICLE_DATE))
+                    OUTPUT = NEWS_ARTICLE_WRITER(VARIANT, TONE, NEWS_ARTICLE_NICHE, NEWS_ARTICLE_TARGET, NEWS_ARTICLE_LENGTH, NEWS_ARTICLE_CONTENT, NEWS_ARTICLE_DATE)
                 if SELECTION == "**Creative Writing Prompts**":
-                    container.write(CREATIVE_WRITING_PROMPT(VARIANT, TONE, CREATIVE_WRITING_GENRE, CREATIVE_WRITING_SETTING, CREATIVE_WRITING_THEME, CREATIVE_WRITING_TYPE, CREATIVE_WRITING_UNIQUE))
+                    OUTPUT = CREATIVE_WRITING_PROMPT(VARIANT, TONE, CREATIVE_WRITING_GENRE, CREATIVE_WRITING_SETTING, CREATIVE_WRITING_THEME, CREATIVE_WRITING_TYPE, CREATIVE_WRITING_UNIQUE)
                 if SELECTION == "**Video Script Writer**":
-                    container.write(VIDEO_SCRIPT_WRITER(VARIANT, TONE, VIDEO_SCRIPT_TYPE, VIDEO_SCRIPT_TARGET, VIDEO_SCRIPT_CTA, VIDEO_SCRIPT_KEYWORDS, VIDEO_SCRIPT_LENGTH))
+                    OUTPUT = VIDEO_SCRIPT_WRITER(VARIANT, TONE, VIDEO_SCRIPT_TYPE, VIDEO_SCRIPT_TARGET, VIDEO_SCRIPT_CTA, VIDEO_SCRIPT_KEYWORDS, VIDEO_SCRIPT_LENGTH)
                 if SELECTION == "**Video Description Writer**":
-                    container.write(VIDEO_DESCRIPTION_WRITER(VARIANT, TONE, VIDEO_DESCRIPTION_TITLE, VIDEO_DESCRIPTION_TARGET, VIDEO_DESCRIPTION_TYPE, VIDEO_DESCRIPTION_KEYWORDS, VIDEO_DESCRIPTION_CTA, VIDEO_DESCRIPTION_CONTENT))
+                    OUTPUT = VIDEO_DESCRIPTION_WRITER(VARIANT, TONE, VIDEO_DESCRIPTION_TITLE, VIDEO_DESCRIPTION_TARGET, VIDEO_DESCRIPTION_TYPE, VIDEO_DESCRIPTION_KEYWORDS, VIDEO_DESCRIPTION_CTA, VIDEO_DESCRIPTION_CONTENT)
                 if SELECTION == "**Hashtag Generator**":
-                    container.write(HASHTAG_GENERATOR(VARIANT, TONE, HASHTAG_TOPIC, HASHTAG_NAME, HASHTAG_TARGET, HASHTAG_KEYWORDS))
+                    OUTPUT = HASHTAG_GENERATOR(VARIANT, TONE, HASHTAG_TOPIC, HASHTAG_NAME, HASHTAG_TARGET, HASHTAG_KEYWORDS)
+
+                container.write(OUTPUT)
+
+                if OUTPUT is not None:
+                    decrease_credit_1(connection, EMAIL)
+                    CREDIT = check_credit(connection, EMAIL)
 
 
 
@@ -626,25 +761,31 @@ elif st.session_state.page == "two":
                 container.write("**Generated content will be displayed here**")
             if GENERATE:
                 if SELECTION == "**Content Promotion Posts**":
-                    container.write(CONTENT_PROMOTION_GENERATOR(VARIANT, TONE, CONTENT_PROMO_TYPE, CONTENT_PROMO_PLATFORM, CONTENT_PROMO_TARGET, CONTENT_PROMO_KEYWORDS, CONTENT_PROMO_CTA))
+                    OUTPUT = CONTENT_PROMOTION_GENERATOR(VARIANT, TONE, CONTENT_PROMO_TYPE, CONTENT_PROMO_PLATFORM, CONTENT_PROMO_TARGET, CONTENT_PROMO_KEYWORDS, CONTENT_PROMO_CTA)
                 if SELECTION == "**Ad Copywriter**":
-                    container.write(AD_COPYWRITER(VARIANT, TONE, AD_COPY_FORMAT, AD_COPY_TARGET, AD_COPY_LENGTH, AD_COPY_CONTENT))
+                    OUTPUT = AD_COPYWRITER(VARIANT, TONE, AD_COPY_FORMAT, AD_COPY_TARGET, AD_COPY_LENGTH, AD_COPY_CONTENT)
                 if SELECTION == "**Call to Action Generator**":
-                    container.write(CALL_TO_ACTION_GENERATOR(VARIANT, TONE, CTA_CONTENT, CTA_TARGET, CTA_ACTION))
+                    OUTPUT = CALL_TO_ACTION_GENERATOR(VARIANT, TONE, CTA_CONTENT, CTA_TARGET, CTA_ACTION)
                 if SELECTION == "**AIDA Copywriter**":
-                    container.write(AIDA_COPYWRITER(VARIANT, TONE, AIDA_COPY_CONTENT, AIDA_COPY_TARGET, AIDA_COPY_CTA, AIDA_COPY_PROBLEM, AIDA_COPY_SOLUTION, AIDA_COPY_BENEFIT))
+                    OUTPUT = AIDA_COPYWRITER(VARIANT, TONE, AIDA_COPY_CONTENT, AIDA_COPY_TARGET, AIDA_COPY_CTA, AIDA_COPY_PROBLEM, AIDA_COPY_SOLUTION, AIDA_COPY_BENEFIT)
                 if SELECTION == "**PAS Copywriter**":
-                    container.write(PAS_COPYWRITER(VARIANT, TONE, PAS_COPY_CONTENT, PAS_COPY_TARGET, PAS_COPY_CTA, PAS_COPY_PROBLEM, PAS_COPY_SOLUTION, PAS_COPY_AGITATION))
+                    OUTPUT = PAS_COPYWRITER(VARIANT, TONE, PAS_COPY_CONTENT, PAS_COPY_TARGET, PAS_COPY_CTA, PAS_COPY_PROBLEM, PAS_COPY_SOLUTION, PAS_COPY_AGITATION)
                 if SELECTION == "**Google Ads Generator**":
-                    container.write(GOOGLE_AD_GENERATOR(VARIANT, TONE, GOOGLE_AD_KEYWORDS, GOOGLE_AD_CTA, GOOGLE_AD_URL, GOOGLE_AD_CONTENT))
+                    OUTPUT = GOOGLE_AD_GENERATOR(VARIANT, TONE, GOOGLE_AD_KEYWORDS, GOOGLE_AD_CTA, GOOGLE_AD_URL, GOOGLE_AD_CONTENT)
                 if SELECTION == "**Social Media Ads Generator**":
-                    container.write(SOCIAL_MEDIA_AD_GENERATOR(VARIANT, TONE, SOCIAL_MEDIA_AD_PLATFORM, SOCIAL_MEDIA_AD_FORMAT, SOCIAL_MEDIA_AD_CTA, SOCIAL_MEDIA_AD_TARGET, SOCIAL_MEDIA_AD_CONTENT))
+                    OUTPUT = SOCIAL_MEDIA_AD_GENERATOR(VARIANT, TONE, SOCIAL_MEDIA_AD_PLATFORM, SOCIAL_MEDIA_AD_FORMAT, SOCIAL_MEDIA_AD_CTA, SOCIAL_MEDIA_AD_TARGET, SOCIAL_MEDIA_AD_CONTENT)
                 if SELECTION == "**Marketing Email Writer**":
-                    container.write(MARKETING_EMAIL_WRITER(VARIANT, TONE, EMAIL_WRITER_TYPE, EMAIL_WRITER_TARGET, EMAIL_WRITER_CTA, EMAIL_WRITER_CONTENT))
+                    OUTPUT = MARKETING_EMAIL_WRITER(VARIANT, TONE, EMAIL_WRITER_TYPE, EMAIL_WRITER_TARGET, EMAIL_WRITER_CTA, EMAIL_WRITER_CONTENT)
                 if SELECTION == "**LinkedIn Post Generator**":
-                    container.write(LINKEDIN_POST_GENERATOR(VARIANT, TONE, LINKEDIN_POST_TYPE, LINKEDIN_POST_TARGET, LINKEDIN_POST_CTA, LINKEDIN_POST_CONTENT))
+                    OUTPUT = LINKEDIN_POST_GENERATOR(VARIANT, TONE, LINKEDIN_POST_TYPE, LINKEDIN_POST_TARGET, LINKEDIN_POST_CTA, LINKEDIN_POST_CONTENT)
                 if SELECTION == "**Facebook Post Generator**":
-                    container.write(FACEBOOK_POST_GENERATOR(VARIANT, TONE, FACEBOOK_POST_TYPE, FACEBOOK_POST_TARGET, FACEBOOK_POST_CTA, FACEBOOK_POST_CONTENT))
+                    OUTPUT = FACEBOOK_POST_GENERATOR(VARIANT, TONE, FACEBOOK_POST_TYPE, FACEBOOK_POST_TARGET, FACEBOOK_POST_CTA, FACEBOOK_POST_CONTENT)
+
+                container.write(OUTPUT)
+
+                if OUTPUT is not None:
+                    decrease_credit_1(connection, EMAIL)
+                    CREDIT = check_credit(connection, EMAIL)
 
 
 
@@ -887,13 +1028,29 @@ elif st.session_state.page == "two":
                 container.write("**Generated content will be displayed here**")
             if GENERATE:
                 if SELECTION == "**Job application writer (resume & cover letter)**":
-                    container.write(JOB_APPLICATION_WRITER(VARIANT, TONE, JOB_APPLICATION_JOB, JOB_APPLICATION_INDUSTRY, JOB_APPLICATION_EXPERIENCE, JOB_APPLICATION_TARGET, JOB_APPLICATION_REQUIREMENTS, JOB_APPLICATION_WORK_TEXT, JOB_APPLICATION_PERSONAL_TEXT, JOB_APPLICATION_SKILLS_TEXT, JOB_APPLICATION_EDUCATION_TEXT))
+                    OUTPUT = JOB_APPLICATION_WRITER(VARIANT, TONE, JOB_APPLICATION_JOB, JOB_APPLICATION_INDUSTRY, JOB_APPLICATION_EXPERIENCE, JOB_APPLICATION_TARGET, JOB_APPLICATION_REQUIREMENTS, JOB_APPLICATION_WORK_TEXT, JOB_APPLICATION_PERSONAL_TEXT, JOB_APPLICATION_SKILLS_TEXT, JOB_APPLICATION_EDUCATION_TEXT)
+                    container.write(OUTPUT)
+                    if OUTPUT is not None:
+                        decrease_credit_2(connection, EMAIL)
+                        CREDIT = check_credit(connection, EMAIL)
                 if SELECTION == "**Interview question generator**":
-                    container.write(INTERVIEW_QUESTION_GENERATOR(VARIANT, TONE, INTERVIEW_NUMBER, INTERVIEW_JOB, INTERVIEW_DESCRIPTION, INTERVIEW_STAGE, INTERVIEW_CATEGORY))
+                    OUTPUT = INTERVIEW_QUESTION_GENERATOR(VARIANT, TONE, INTERVIEW_NUMBER, INTERVIEW_JOB, INTERVIEW_DESCRIPTION, INTERVIEW_STAGE, INTERVIEW_CATEGORY)
+                    container.write(OUTPUT)
+                    if OUTPUT is not None:
+                        decrease_credit_2(connection, EMAIL)
+                        CREDIT = check_credit(connection, EMAIL)
                 if SELECTION == "**Job description generator**":
-                    container.write(JOB_DESCRIPTION_GENERATOR(VARIANT, TONE, JOB_DESCRIPTION_JOB, JOB_DESCRIPTION_COMPANY, JOB_DESCRIPTION_INDUSTRY, JOB_DESCRIPTION_EXPERIENCE, JOB_DESCRIPTION_RESPONSIBILITIES))
+                    OUTPUT = JOB_DESCRIPTION_GENERATOR(VARIANT, TONE, JOB_DESCRIPTION_JOB, JOB_DESCRIPTION_COMPANY, JOB_DESCRIPTION_INDUSTRY, JOB_DESCRIPTION_EXPERIENCE, JOB_DESCRIPTION_RESPONSIBILITIES)
+                    container.write(OUTPUT)
+                    if OUTPUT is not None:
+                        decrease_credit_2(connection, EMAIL)
+                        CREDIT = check_credit(connection, EMAIL)
                 if SELECTION == "**Professional email writer**":
-                    container.write(PROFESSIONAL_EMAIL_WRITER(VARIANT, TONE, PRO_EMAIL_TYPE, PRO_EMAIL_RECIPIENT, PRO_EMAIL_PURPOSE, PRO_EMAIL_INFO_TEXT))
+                    OUTPUT = PROFESSIONAL_EMAIL_WRITER(VARIANT, TONE, PRO_EMAIL_TYPE, PRO_EMAIL_RECIPIENT, PRO_EMAIL_PURPOSE, PRO_EMAIL_INFO_TEXT)
+                    container.write(OUTPUT)
+                    if OUTPUT is not None:
+                        decrease_credit_1(connection, EMAIL)
+                        CREDIT = check_credit(connection, EMAIL)
                 if SELECTION == "**Document summarizer**":
                     reader = PdfReader(DOC_SUMMARY_FILE)
                     BOOK = """"""
@@ -905,15 +1062,35 @@ elif st.session_state.page == "two":
                         page = reader.pages[i]
                         text = page.extract_text()
                         BOOK = BOOK + text
-                    container.write(DOCUMENT_SUMMARIZER(VARIANT, TONE, BOOK, DOC_SUMMARY_LENGTH, DOC_SUMMARY_POINTS_TEXT))
+                    OUTPUT = DOCUMENT_SUMMARIZER(VARIANT, TONE, BOOK, DOC_SUMMARY_LENGTH, DOC_SUMMARY_POINTS_TEXT)
+                    container.write(OUTPUT)
+                    if OUTPUT is not None:
+                        decrease_credit_1(connection, EMAIL)
+                        CREDIT = check_credit(connection, EMAIL)
                 if SELECTION == "**Meeting notes summarizer**":
-                    container.write(MEETING_NOTES_SUMMARIZER(VARIANT, TONE, MEETING_SUMMARY_FILE, MEETING_SUMMARY_LENGTH, MEETING_SUMMARY_TOPIC))
+                    OUTPUT = MEETING_NOTES_SUMMARIZER(VARIANT, TONE, MEETING_SUMMARY_FILE, MEETING_SUMMARY_LENGTH, MEETING_SUMMARY_TOPIC)
+                    container.write(OUTPUT)
+                    if OUTPUT is not None:
+                        decrease_credit_1(connection, EMAIL)
+                        CREDIT = check_credit(connection, EMAIL)
                 if SELECTION == "**Cover letter generator**":
-                    container.write(COVER_LETTER_GENERATOR(VARIANT, TONE, COVER_LETTER_JOB, COVER_LETTER_COMPANY, COVER_LETTER_SKILLS, COVER_LETTER_EXPERIENCE))
+                    OUTPUT = COVER_LETTER_GENERATOR(VARIANT, TONE, COVER_LETTER_JOB, COVER_LETTER_COMPANY, COVER_LETTER_SKILLS, COVER_LETTER_EXPERIENCE)
+                    container.write(OUTPUT)
+                    if OUTPUT is not None:
+                        decrease_credit_1(connection, EMAIL)
+                        CREDIT = check_credit(connection, EMAIL)
                 if SELECTION == "**Business pitch generator**":
-                    container.write(BUSINESS_PITCH_GENERATOR(VARIANT, TONE, PITCH_FORMAT, PITCH_BUSINESS, PITCH_PROBLEM, PITCH_SOLUTION, PITCH_TARGET))
+                    OUTPUT = BUSINESS_PITCH_GENERATOR(VARIANT, TONE, PITCH_FORMAT, PITCH_BUSINESS, PITCH_PROBLEM, PITCH_SOLUTION, PITCH_TARGET)
+                    container.write(OUTPUT)
+                    if OUTPUT is not None:
+                        decrease_credit_1(connection, EMAIL)
+                        CREDIT = check_credit(connection, EMAIL)
                 if SELECTION == "**Meeting agenda generator**":
-                    container.write(MEETING_AGENDA_GENERATOR(VARIANT, TONE, MEETING_AGENDA_TOPIC, MEETING_AGENDA_PURPOSE, MEETING_AGENDA_ATTENDEES, MEETING_AGENDA_POINTS, MEETING_AGENDA_TIME, MEETING_AGENDA_ACTION))
+                    OUTPUT = MEETING_AGENDA_GENERATOR(VARIANT, TONE, MEETING_AGENDA_TOPIC, MEETING_AGENDA_PURPOSE, MEETING_AGENDA_ATTENDEES, MEETING_AGENDA_POINTS, MEETING_AGENDA_TIME, MEETING_AGENDA_ACTION)
+                    container.write(OUTPUT)
+                    if OUTPUT is not None:
+                        decrease_credit_2(connection, EMAIL)
+                        CREDIT = check_credit(connection, EMAIL)
 
 
 
@@ -1052,19 +1229,47 @@ elif st.session_state.page == "two":
                 container.write("**Generated content will be displayed here**")
             if GENERATE:
                 if SELECTION == "**SEO content writer**":
-                    container.write(SEO_CONTENT_WRITER(VARIANT, TONE, SEO_CONTENT_TYPES, SEO_CONTENT_LENGTH, SEO_CONTENT_TARGET, SEO_CONTENT_KEYWORDS))
+                    OUTPUT = SEO_CONTENT_WRITER(VARIANT, TONE, SEO_CONTENT_TYPES, SEO_CONTENT_LENGTH, SEO_CONTENT_TARGET, SEO_CONTENT_KEYWORDS)
+                    container.write(OUTPUT)
+                    if OUTPUT is not None:
+                        decrease_credit_1(connection, EMAIL)
+                        CREDIT = check_credit(connection, EMAIL)
                 if SELECTION == "**Keyword extractor**":
-                    container.write(KEYWORD_EXTRACTOR(VARIANT, TONE, KEYWORD_EXTRACT_CONTENT, KEYWORD_EXTRACT_COUNT, KEYWORD_EXTRACT_TYPE))
+                    OUTPUT = KEYWORD_EXTRACTOR(VARIANT, TONE, KEYWORD_EXTRACT_CONTENT, KEYWORD_EXTRACT_COUNT, KEYWORD_EXTRACT_TYPE)
+                    container.write(OUTPUT)
+                    if OUTPUT is not None:
+                        decrease_credit_1(connection, EMAIL)
+                        CREDIT = check_credit(connection, EMAIL)
                 if SELECTION == "**AI keyword generator**":
-                    container.write(KEYWORD_GENERATOR(VARIANT, TONE, KEYWORD_GENERATOR_TARGET, KEYWORD_GENERATOR_COUNT, KEYWORD_GENERATOR_TYPE, KEYWORD_GENERATOR_SEED))
+                    OUTPUT = KEYWORD_GENERATOR(VARIANT, TONE, KEYWORD_GENERATOR_TARGET, KEYWORD_GENERATOR_COUNT, KEYWORD_GENERATOR_TYPE, KEYWORD_GENERATOR_SEED)
+                    container.write(OUTPUT)
+                    if OUTPUT is not None:
+                        decrease_credit_1(connection, EMAIL)
+                        CREDIT = check_credit(connection, EMAIL)
                 if SELECTION == "**Meta title generator**":
-                    container.write(META_TITLE_GENERATOR(VARIANT, TONE, META_TITLE_PAGE, META_TITLE_KEYWORDS, META_TITLE_LIMIT))
+                    OUTPUT = META_TITLE_GENERATOR(VARIANT, TONE, META_TITLE_PAGE, META_TITLE_KEYWORDS, META_TITLE_LIMIT)
+                    container.write(OUTPUT)
+                    if OUTPUT is not None:
+                        decrease_credit_1(connection, EMAIL)
+                        CREDIT = check_credit(connection, EMAIL)
                 if SELECTION == "**Meta description generator**":
-                    container.write(META_DESCRIPTION_GENERATOR(VARIANT, TONE, META_DESCRIPTION_PAGE, META_DESCRIPTION_KEYWORDS, META_DESCRIPTION_LIMIT, META_DESCRIPTION_CONTENT))
+                    OUTPUT = META_DESCRIPTION_GENERATOR(VARIANT, TONE, META_DESCRIPTION_PAGE, META_DESCRIPTION_KEYWORDS, META_DESCRIPTION_LIMIT, META_DESCRIPTION_CONTENT)
+                    container.write(OUTPUT)
+                    if OUTPUT is not None:
+                        decrease_credit_1(connection, EMAIL)
+                        CREDIT = check_credit(connection, EMAIL)
                 if SELECTION == "**Website copywriter**":
-                    container.write(WEBSITE_COPYWRITER(VARIANT, TONE, WEBSITE_COPY_TYPE, WEBSITE_COPY_TARGET, WEBSITE_COPY_CONTENT))
+                    OUTPUT = WEBSITE_COPYWRITER(VARIANT, TONE, WEBSITE_COPY_TYPE, WEBSITE_COPY_TARGET, WEBSITE_COPY_CONTENT)
+                    container.write(OUTPUT)
+                    if OUTPUT is not None:
+                        decrease_credit_2(connection, EMAIL)
+                        CREDIT = check_credit(connection, EMAIL)
                 if SELECTION == "**Product description generator**":
-                    container.write(PRODUCT_DESCRIPTION_GENERATOR(VARIANT, TONE, PRODUCT_DESCRIPTION_NAME, PRODUCT_DESCRIPTION_CATEGORY, PRODUCT_DESCRIPTION_FEATURES, PRODUCT_DESCRIPTION_TARGET, TONE))
+                    OUTPUT = PRODUCT_DESCRIPTION_GENERATOR(VARIANT, TONE, PRODUCT_DESCRIPTION_NAME, PRODUCT_DESCRIPTION_CATEGORY, PRODUCT_DESCRIPTION_FEATURES, PRODUCT_DESCRIPTION_TARGET, TONE)
+                    container.write(OUTPUT)
+                    if OUTPUT is not None:
+                        decrease_credit_2(connection, EMAIL)
+                        CREDIT = check_credit(connection, EMAIL)
 
 
 
@@ -1166,7 +1371,11 @@ elif st.session_state.page == "two":
             if GENERATE:
                 if SELECTION == "**Research Paper Summarizer**":
                     if RESEARCH_SUMMARY_FOCUS and RESEARCH_SUMMARY_LENGTH and RESEARCH_SUMMARY_BOOL_TEXT == "Content entered":
-                        container.write(RESEARCH_PAPER_SUMMARIZER(RESEARCH_SUMMARY_FOCUS, RESEARCH_SUMMARY_LENGTH, RESEARCH_SUMMARY_TEXT))
+                        OUTPUT = RESEARCH_PAPER_SUMMARIZER(RESEARCH_SUMMARY_FOCUS, RESEARCH_SUMMARY_LENGTH, RESEARCH_SUMMARY_TEXT)
+                        container.write(OUTPUT)
+                        if OUTPUT is not None:
+                            decrease_credit_2(connection, EMAIL)
+                            CREDIT = check_credit(connection, EMAIL)
                     if RESEARCH_SUMMARY_FOCUS and RESEARCH_SUMMARY_LENGTH and RESEARCH_SUMMARY_BOOL_TEXT == "File uploaded":
                         reader = PdfReader(RESEARCH_SUMMARY_FILE)
                         TEXT = """"""
@@ -1178,7 +1387,12 @@ elif st.session_state.page == "two":
                             page = reader.pages[i]
                             text = page.extract_text()
                             TEXT = TEXT + text
-                        container.write(RESEARCH_PAPER_SUMMARIZER(RESEARCH_SUMMARY_FOCUS, RESEARCH_SUMMARY_LENGTH, TEXT))
+                        
+                        OUTPUT = RESEARCH_PAPER_SUMMARIZER(RESEARCH_SUMMARY_FOCUS, RESEARCH_SUMMARY_LENGTH, TEXT)
+                        container.write(OUTPUT)
+                        if OUTPUT is not None:
+                            decrease_credit_2(connection, EMAIL)
+                            CREDIT = check_credit(connection, EMAIL)
 
                 if SELECTION == "**Lesson Explainer**":
                     reader = PdfReader(CHAPTER_EXPLAINER_BOOK)
@@ -1191,7 +1405,11 @@ elif st.session_state.page == "two":
                         page = reader.pages[i]
                         text = page.extract_text()
                         BOOK = BOOK + text
-                    container.write(CHAPTER_EXPLAINER(BOOK, CHAPTER_EXPLAINER_TARGET))
+                    OUTPUT = CHAPTER_EXPLAINER(BOOK, CHAPTER_EXPLAINER_TARGET)
+                    container.write(OUTPUT)
+                    if OUTPUT is not None:
+                        decrease_credit_1(connection, EMAIL)
+                        CREDIT = check_credit(connection, EMAIL)
 
                 if SELECTION == "**Question Paper Generator**":
                     reader = PdfReader(QUESTION_PAPER_BOOK)
@@ -1204,8 +1422,12 @@ elif st.session_state.page == "two":
                         page = reader.pages[i]
                         text = page.extract_text()
                         BOOK = BOOK + text
-                    container.write(QUESTION_PAPER_GENERATION(QUESTION_PAPER_SUBJECT, QUESTION_PAPER_LEVEL, QUESTION_PAPER_TYPES, QUESTION_PAPER_NUMBERS, QUESTION_PAPER_TIME, BOOK))
-                
+                    OUTPUT = QUESTION_PAPER_GENERATION(QUESTION_PAPER_SUBJECT, QUESTION_PAPER_LEVEL, QUESTION_PAPER_TYPES, QUESTION_PAPER_NUMBERS, QUESTION_PAPER_TIME, BOOK)
+                    container.write(OUTPUT)
+                    if OUTPUT is not None:
+                        decrease_credit_1(connection, EMAIL)
+                        CREDIT = check_credit(connection, EMAIL)
+
                 if SELECTION == "**Study Guide Creator**":
                     reader = PdfReader(STUDY_GUIDE_BOOK)
                     BOOK = """"""
@@ -1217,7 +1439,11 @@ elif st.session_state.page == "two":
                         page = reader.pages[i]
                         text = page.extract_text()
                         BOOK = BOOK + text
-                    container.write(STUDY_GUIDE_CREATOR(STUDY_GUIDE_TYPE, BOOK))
+                    OUTPUT = STUDY_GUIDE_CREATOR(STUDY_GUIDE_TYPE, BOOK)
+                    container.write(OUTPUT)
+                    if OUTPUT is not None:
+                        decrease_credit_1(connection, EMAIL)
+                        CREDIT = check_credit(connection, EMAIL)
 
 
 
@@ -1345,17 +1571,41 @@ elif st.session_state.page == "two":
                 container.write("**Generated content will be displayed here**")
             if GENERATE:
                 if SELECTION == "**Song Lyrics Generator**":
-                    container.write(SONG_LYRICS_GENERATOR(VARIANT, TONE, SONG_GENRE, SONG_THEME, SONG_KEYWORDS))
-                if SELECTION == "**Poem Generator**":
-                    container.write(POEM_GENERATOR(VARIANT, TONE, POEM_TYPE, POEM_THEME, POEM_KEYWORDS))
-                if SELECTION == "**Story Generator**":
-                    container.write(STORY_GENERATOR(VARIANT, TONE, STORY_GENRE, STORY_THEME, STORY_SETTING, STORY_CHARACTERS, STORY_PLOT))
-                if SELECTION == "**Personalized Recipe Generator**":
-                    container.write(PERSONALIZED_RECIPE_GENERATOR(VARIANT, TONE, RECIPE_CUISINE, RECIPE_RESTRICTION, RECIPE_LEVEL, RECIPE_INGREDIENTS))
-                if SELECTION == "**Recipe from Ingredients**":
-                    container.write(RECIPE_GENERATOR(VARIANT, TONE, QUICK_RECIPE_CUISINE, QUICK_RECIPE_TYPE, QUICK_RECIPE_INGREDIENTS))
-                if SELECTION == "**Personalized Email Writer**":
-                    container.write(PERSONALIZED_EMAIL_GENERATOR(VARIANT, TONE, PERSONALIZED_EMAIL_CONTENT, PERSONALIZED_EMAIL_TYPE, PERSONALIZED_EMAIL_RECIPIENT, PERSONALIZED_EMAIL_EXTRA_CONTENT))
+                    OUTPUT = SONG_LYRICS_GENERATOR(VARIANT, TONE, SONG_GENRE, SONG_THEME, SONG_KEYWORDS)
+                    container.write(OUTPUT)
+                    if OUTPUT is not None:
+                        decrease_credit_1(connection, EMAIL)
+                        CREDIT = check_credit(connection, EMAIL)
+                elif SELECTION == "**Poem Generator**":
+                    OUTPUT = POEM_GENERATOR(VARIANT, TONE, POEM_TYPE, POEM_THEME, POEM_KEYWORDS)
+                    container.write(OUTPUT)
+                    if OUTPUT is not None:
+                        decrease_credit_1(connection, EMAIL)
+                        CREDIT = check_credit(connection, EMAIL)
+                elif SELECTION == "**Story Generator**":
+                    OUTPUT = STORY_GENERATOR(VARIANT, TONE, STORY_GENRE, STORY_THEME, STORY_SETTING, STORY_CHARACTERS, STORY_PLOT)
+                    container.write(OUTPUT)
+                    if OUTPUT is not None:
+                        decrease_credit_2(connection, EMAIL)
+                        CREDIT = check_credit(connection, EMAIL)
+                elif SELECTION == "**Personalized Recipe Generator**":
+                    OUTPUT = PERSONALIZED_RECIPE_GENERATOR(VARIANT, TONE, RECIPE_CUISINE, RECIPE_RESTRICTION, RECIPE_LEVEL, RECIPE_INGREDIENTS)
+                    container.write(OUTPUT)
+                    if OUTPUT is not None:
+                        decrease_credit_1(connection, EMAIL)
+                        CREDIT = check_credit(connection, EMAIL)
+                elif SELECTION == "**Recipe from Ingredients**":
+                    OUTPUT = RECIPE_GENERATOR(VARIANT, TONE, QUICK_RECIPE_CUISINE, QUICK_RECIPE_TYPE, QUICK_RECIPE_INGREDIENTS)
+                    container.write(OUTPUT)
+                    if OUTPUT is not None:
+                        decrease_credit_1(connection, EMAIL)
+                        CREDIT = check_credit(connection, EMAIL)
+                elif SELECTION == "**Personalized Email Writer**":
+                    OUTPUT = PERSONALIZED_EMAIL_GENERATOR(VARIANT, TONE, PERSONALIZED_EMAIL_CONTENT, PERSONALIZED_EMAIL_TYPE, PERSONALIZED_EMAIL_RECIPIENT, PERSONALIZED_EMAIL_EXTRA_CONTENT)
+                    container.write(OUTPUT)
+                    if OUTPUT is not None:
+                        decrease_credit_1(connection, EMAIL)
+                        CREDIT = check_credit(connection, EMAIL)
 
 
 
@@ -1419,9 +1669,15 @@ elif st.session_state.page == "two":
                 container.write("**Generated content will be displayed here**")
             if GENERATE:
                 if SELECTION == "**Code Generator**":
-                    container.write(CODE_GENERATOR(VARIANT, TONE, CODE_INSTRUCTION, CODE_LANGUAGE, CODE_EXAMPLE_TEXT))
+                    OUTPUT = CODE_GENERATOR(VARIANT, TONE, CODE_INSTRUCTION, CODE_LANGUAGE, CODE_EXAMPLE_TEXT)
                 if SELECTION == "**Technical Documentation Writer**":
-                    container.write(TECHNICAL_DOCUMENTATION_WRITER(VARIANT, TONE, DOCUMENTATION_TYPE, DOCUMENTATION_LEVEL, DOCUMENTATION_CONTENT))
+                    OUTPUT = TECHNICAL_DOCUMENTATION_WRITER(VARIANT, TONE, DOCUMENTATION_TYPE, DOCUMENTATION_LEVEL, DOCUMENTATION_CONTENT)
+
+                container.write(OUTPUT)
+
+                if OUTPUT is not None:
+                    decrease_credit_1(connection, EMAIL)
+                    CREDIT = check_credit(connection, EMAIL)
 
 
 
@@ -1465,7 +1721,7 @@ elif st.session_state.page == "two":
                 # # # # # M O D E 3 # # # # #
 
                 if SELECTION == "**Text Inflator**":
-                    SMOL1, SMOL2 = st.columns(3)
+                    SMOL1, SMOL2 = st.columns(2)
                     with SMOL1:
                         INFLATOR_CONTENT = st.text_area("Content to Inflate", key="content3")
                     with SMOL2:
@@ -1522,18 +1778,26 @@ elif st.session_state.page == "two":
             if not GENERATE:
                 container.write("**Generated content will be displayed here**")
             if GENERATE:
+                OUTPUT = None
+
                 if SELECTION == "**Grammar Checker & Improver**":
-                    container.write(GRAMMAR_CHECKER(VARIANT, TONE, GRAMMAR_CONTENT, GRAMMAR_LEVEL))
+                    OUTPUT = GRAMMAR_CHECKER(VARIANT, TONE, GRAMMAR_CONTENT, GRAMMAR_LEVEL)
                 if SELECTION == "**Sentence Reworder**":
-                    container.write(SENTENCE_REWORDER(VARIANT, TONE, REWORD_CONTENT))
+                    OUTPUT = SENTENCE_REWORDER(VARIANT, TONE, REWORD_CONTENT)
                 if SELECTION == "**Text Inflator**":
-                    container.write(TEXT_INFLATOR(VARIANT, TONE, INFLATOR_CONTENT, INFLATOR_LEVEL))
+                    OUTPUT = TEXT_INFLATOR(VARIANT, TONE, INFLATOR_CONTENT, INFLATOR_LEVEL)
                 if SELECTION == "**Sentence Shortener**":
-                    container.write(SENTENCE_SHORTENER(VARIANT, TONE, SHORTENER_CONTENT, SHORTENER_LEVEL))
+                    OUTPUT = SENTENCE_SHORTENER(VARIANT, TONE, SHORTENER_CONTENT, SHORTENER_LEVEL)
                 if SELECTION == "**Summarizer**":
-                    container.write(SUMMARIZER(VARIANT, TONE, SUMMARY_CONTENT, SUMMARY_LENGTH))
+                    OUTPUT = SUMMARIZER(VARIANT, TONE, SUMMARY_CONTENT, SUMMARY_LENGTH)
                 if SELECTION == "**Translator**":
-                    container.write(TRANSLATOR(VARIANT, TONE, TRANSLATOR_CONTENT, TRANSLATOR_LANGUAGE))
+                    OUTPUT = TRANSLATOR(VARIANT, TONE, TRANSLATOR_CONTENT, TRANSLATOR_LANGUAGE)
+            
+                container.write(OUTPUT)
+
+                if OUTPUT is not None:
+                    decrease_credit_1(connection, EMAIL)
+                    CREDIT = check_credit(connection, EMAIL)
 
 
 
